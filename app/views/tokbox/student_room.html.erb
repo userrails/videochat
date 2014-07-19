@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" >
+  <head>
+    <title>OpenTok Getting Started</title>
+    <script src="http://staging.tokbox.com/v0.91/js/TB.min.js"></script>
+    <script type="text/javascript">
+      var apiKey = <%= OPEN_TOK_API_KEY %>;
+      var sessionId = "<%= @tok_session_id %>";
+      var token = "<%= @tok_token %>";
+
+
+      TB.setLogLevel(TB.DEBUG);
+
+      var session = TB.initSession(sessionId);
+      session.addEventListener('sessionConnected', sessionConnectedHandler);
+      session.addEventListener('streamCreated', streamCreatedHandler);
+      session.connect(apiKey, token);
+
+      var publisher;
+
+      function sessionConnectedHandler(event) {
+        publisher = session.publish('myPublisherDiv',{width: 175,height: 135}, {wmode : 'window'});
+
+        // Subscribe to streams that were in the session when we connected
+        subscribeToStreams(event.streams);
+      }
+
+      function streamCreatedHandler(event) {
+        // Subscribe to any new streams that are created
+        subscribeToStreams(event.streams);
+      }
+
+      function subscribeToStreams(streams) {
+        for (var i = 0; i < streams.length; i++) {
+          // Check that connectionId on the stream to make sure we don't subscribe to ourself
+          if (streams[i].connection.connectionId == session.connection.connectionId) {
+            return;
+          }
+
+          // Create the div to put the subscriber element in to
+          var div = document.createElement('div');
+          div.setAttribute('id', 'stream' + streams[i].streamId);
+          document.body.appendChild(div);
+          var subscribersDiv = document.getElementById("subscribers");
+          subscribersDiv.appendChild(div);
+
+          // Subscribe to the stream
+          session.subscribe(streams[i], div.id, {width: 575,height: 475});
+        }
+      }
+    </script>
+    <%= javascript_include_tag "jquery","http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js","http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"%>
+    <script type="text/javascript">
+      $(document).ready(function(e) {
+
+        $('#notification-modal').css('display','block');
+        $('.overlay').css('display','block');
+        $('.overlay').click(function(){$('#notification-modal').css('display','none');$('.overlay').css('display','none')});
+        jQuery.fn.center = function () {
+          this.css("position","absolute");
+          this.css("top", ( jQuery(window).height() - this.height() ) / 2+jQuery(window).scrollTop() + "px");
+          this.css("left", ( jQuery(window).width() - this.width() ) / 2+jQuery(window).scrollLeft() + "px");
+          return this;
+        }
+        $('#notification-modal').center();
+        $('#notification-modal').css({'position':'fixed','z-index':'4000'});
+
+
+        $('.ok_btn').click(function(e) {
+          $('#notification-modal').css('display','none');
+          $('.overlay').css('display','none');
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+    <div id="time_display">Duration: <%= @course_topic_duration %></div>
+    <div id="main_menu">
+      <div id="left_corner"></div>
+      <div id="mid_bg">
+        <span  id="main_menu_active" style="color:#89440c;font-size: 22px;"><%= @course_name%></span>
+        <span id="course_by"><span class="live_by">Live by:</span><span class="mentor_name"><%= @user_display_name %></span></span>
+        <span id="current_topic">Current topic:<%= @course_topic_course_content %></span>
+      </div>
+      <div id="right_corner"></div>
+    </div>
+    <div  style="display: none;float: right;height: 379px;margin: 3px 103px;width: 485px;" >
+      <div id="myPublisherDiv">
+      </div>
+    </div>
+    <div id="end_btn_holder" style="cursor: pointer;left: 963px;position: absolute;top: 603px;">
+      <%= link_to "<span class=button_left></span><span class=button_mid>Quit Session</span><span class=button_right></span>".html_safe, send_student_live_status_tokbox_index_path(:param=>@course_id,:param1=>@user_account_id),:method => "GET",:confirm =>"Do you want to quite the live session?" %>
+    </div>
+    <div id="subscribers" style="float: right;height: 379px;margin: 3px 103px;width: 485px;"></div>
+    <%# if @course_topic.session_status=="session_break" %>
+      <%#*<div class="overlay transparent"></div>%>
+      <%#*<div id="notification-modal" style="height:auto;width: auto;">%>
+        <%#*<span id="notification_msg">Lets take a break. Mentor will resumes the live course session after sometime.</span>%>
+        <%#*<div class="notification_ok_button">%>
+          <%#*<a class="allbutton ok_btn" id="ok_button" >%>
+            <%#*<span class="button_left"></span>%>
+            <%#*<span class="button_mid">Ok</span>%>
+            <%#*<span class="button_right"></span>%>
+          <%#*</a>%>
+        <%#*</div>%>
+      <%#*</div>%>
+    <%#end%>
+      </body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>OpenTok Getting Started</title>
+    <%= javascript_include_tag 'http://staging.tokbox.com/v0.91/js/TB.min.js' %>
+    <%= javascript_include_tag 'application','http://staging.tokbox.com/v0.91/js/TB.min.js',"jquery.tinyscrollbar.min" %>
+    <script type="text/javascript">
+      var apiKey = <%= OPEN_TOK_API_KEY %>;
+      var sessionId = "<%= @tok_session_id %>";
+      var token = "<%= @tok_token %>";
+      TB.setLogLevel(TB.DEBUG);
+      if (TB.checkSystemRequirements() != TB.HAS_REQUIREMENTS) {
+        alert('Minimum System Requirements not met!');
+      }
+      var session = TB.initSession(sessionId);
+      session.addEventListener('sessionConnected', sessionConnectedHandler);
+      session.addEventListener('streamCreated', streamCreatedHandler);
+
+      session.connect(apiKey, token);
+      var publisher
+
+      function sessionConnectedHandler(event) {
+        publisher = TB.initPublisher(apiKey, 'myPublisherDiv', {width: 575, height: 475}, {wmode: 'window'});
+        session.publish(publisher);
+        publisher.addEventListener("settingsButtonClick", settingsButtonClickHandler);
+        publisher.addEventListener("resize", publisherResizeHandler);
+
+        function publisherResizeHandler(event) {
+          newWidth = event.widthTo;
+          newHeight = event.heightTo;
+          // Modify the UI based on the new dimensions of the publisher
+        }
+        var cameras;
+        var mics;
+
+        publisher.addEventListener("devicesDetected", devicesDetectedHandler);
+        publisher.detectDevices();
+
+        function devicesDetectedHandler(event) {
+          cameras = event.cameras;
+          mics = event.microphones;
+
+          if (event.cameras.length < 1) {
+            alert("No camera connected.");
+          } else if (event.microphone.length < 1) {
+            alert("No microphone connected.");
+          }
+          if (event.cameras.length > 0 && event.microphones.length > 0) {
+            alert("Selected camera: " + event.selectedCamera.name + "\nSelected microphone: " + selectedMicrophone.name);
+          }
+        }
+        // Subscribe to streams that were in the session when we connected
+        subscribeToStreams(event.streams);
+      }
+
+      function unpublsh() {
+        session.unpublish(publisher);
+        alert(" Your has been ende");
+      }
+
+      function settingsButtonClickHandler() {
+        var newDiv = document.createElement("div");
+        newDiv.id = "devicePanel";
+        document.getElementById("devicePanelContainer").appendChild(newDiv);
+        devicePanel = deviceManager.displayPanel("devicePanel", publisher);
+        devicePanel.addEventListener("devicesSelected", devicesSelectedHandler);
+        document.getElementById("closeButton").style.visibility = "visible";
+      }
+      function closePanel() {
+        deviceManager.removePanel(devicePanel);
+        document.getElementById("closeButton").style.visibility = "hidden";
+      }
+
+      function streamCreatedHandler(event) {
+
+        // Subscribe to any new streams that are created
+        subscribeToStreams(event.streams);
+      }
+
+      function subscribeToStreams(streams) {
+        for (var i = 0; i < streams.length; i++) {
+          // Check that connectionId on the stream to make sure we don't subscribe to ourself
+          if (streams[i].connection.connectionId == session.connection.connectionId) {
+            return;
+          }
+
+          // Create the div to put the subscriber element in to
+          var div = document.createElement('div');
+          div.setAttribute('id', 'stream' + streams[i].streamId, 'style', 'margin:-1175px 355px 1347px 30px');
+          // div.style.marginTop = ".25in";
+          document.body.appendChild(div);
+          var subscribersDiv = document.getElementById("subscribers");
+          subscribersDiv.appendChild(div);
+          // Subscribe to the stream
+          session.subscribe(streams[i], div.id, {width: 143, height: 118});
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="time_display">Duration: <%= @course_topic_duration %> hrs</div>
+    <div style="height: auto;
+         left: 1113px;
+         position: absolute;
+         top: 116px;
+         width: 533px;">
+      <%= button_to "Screen Share",screen_share_tokbox_index_path,:remote=>true,:method =>"get",:id=>"screen",:style=>"color:#0D5A75;font-size:17px;"%></div>
+    <script type="text/javascript">
+      $('#screen').click(function() {
+        $.ajax({
+          url: "/tokbox/screen_share",
+          method: 'GET',
+          success: function(data) {
+            $('#screen').html(data);
+
+          }
+        });
+      });
+    </script>
+    <div id="main_menu">
+      <div id="left_corner"></div>
+      <div id="mid_bg">
+        <span  id="main_menu_active" style="color:#89440c;font-size: 22px;"><%= @course_name%></span>
+        <span id="course_by"><span class="live_by">Live by:</span><span class="mentor_name"><%= @user_display_name %></span></span>
+        <span id="current_topic"><span class="live_by">Current topic:</span><%= @course_topic_course_content %></span>
+      </div>
+      <div id="right_corner"></div>
+    </div>
+    <div class="clear"></div>
+    <div id="learner_view">
+      <div id="subscribers_div">
+        <div id="scrollbar1">
+          <div class="scrollbar"><div class="track"><div class="thumb"><div class="end"></div></div></div></div>
+          <div class="viewport">
+            <div class="overview">
+              <div id="learners_list">
+                <div id="subscribers"></div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="each_learner">
+                  <div class="learner_left"></div>
+                  <div class="learner_mid">
+                    <img src="/assets/friends1.png" width="50" height="50"/>
+                    <span class="each_learner_name">Albert</span>
+                  </div>
+                  <div class="learner_right"></div>
+                </div>
+                <div class="clear"></div>
+              </div></div>
+
+          </div>
+        </div>
+      </div>
+      <div id="course_view">
+        <div id="course_live">
+          <div id="myPublisherDiv" >
+          </div>
+          <div class="overlay transparent"></div>
+          <%= form_tag send_live_session_status_tokbox_index_path,:remote =>true,:method =>"get" do %>
+            <div id="end_session-modal" class="shadow" style="position: fixed;z-index: 4000;">
+              <%= hidden_field_tag :course,@course_id %>
+              <%= hidden_field_tag :course_topic,@course_topic_id %>
+              <%= hidden_field_tag :user_account_id,@user_account_id %>
+              <div id="break_session">
+                <%= radio_button_tag(:session_status,"session_break") %>
+                <span class="text_for_session">Break Session</span>
+              </div>
+              <div id="session_finished">
+                <%= radio_button_tag(:session_status,"session_end") %>
+                <span class="text_for_session">Session Finished</span>
+              </div>
+              <div class="session_popup_buttons">
+                <button id="end_ok_button" type="submit" style="background:none;border: none;">
+                  <span class="button_left"></span>
+                  <span class="button_mid">Ok</span>
+                  <span class="button_right"></span>
+                </button>
+                <a class="allbutton" id="end_cancel_button" >
+                  <span class="button_left"></span>
+                  <span class="button_mid">Cancel</span>
+                  <span class="button_right"></span>
+                </a>
+              </div>
+            </div>
+          <%end%>
+        </div>
+        <div id="end_btn_holder" style="cursor: pointer;left: 1013px;position: absolute;top: 606px;">
+          <a class="allbutton" id="end_current_session">
+            <span class="button_left"></span>
+            <span class="button_mid">End Session</span>
+            <span class="button_right"></span>
+          </a>
+        </div>
+        <div id="devicePanelContainer"></div>
+        <div>
+          <input id="closeButton" type="button" onclick="closePanel()" value="Close panel" style="visibility:hidden">
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $('#scrollbar1').tinyscrollbar();
+      });
+    </script>
+    <script>
+      $('#end_current_session').click(function(e) {
+        abc();
+      });
+      $('#end_cancel_button').click(function(e) {
+        $('#end_session-modal').css('display', 'none');
+        $('.overlay').css('display', 'none')
+      });
+
+      function abc() {
+        jQuery.fn.center = function() {
+          this.css("position", "absolute");
+          this.css("top", (jQuery(window).height() - this.height() - 100) / 2 + jQuery(window).scrollTop() + "px");
+          this.css("left", (jQuery(window).width() - this.width()) / 2 + jQuery(window).scrollLeft() + "px");
+          return this;
+        }
+        $('#end_session-modal').center();
+        $('#end_session-modal').css('display', 'block');
+        $('.overlay').css('display', 'block');
+        $('.overlay').click(function() {
+          $('#end_session-modal').css('display', 'none');
+          $('.overlay').css('display', 'none')
+        });
+        //        jQuery.fn.center = function () {
+        //            this.css("position","absolute");
+        //            this.css("top", ( jQuery(window).height() - this.height() ) / 2+jQuery(window).scrollTop() + "px");
+        //            this.css("left", ( jQuery(window).width() - this.width() ) / 2+jQuery(window).scrollLeft() + "px");
+        //            return this;
+        //        }
+        //        $('#end_session-modal').center();
+        //        $('#end_session-modal').css({
+        //            'position':'fixed',
+        //            'z-index':'4000'
+        //        });
+
+      }
+    </script>
+  </body>
+</html>

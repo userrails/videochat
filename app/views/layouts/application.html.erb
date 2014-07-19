@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>EduPdu</title>
+    <%= stylesheet_link_tag "stylesheet","style"%>
+    <%= javascript_include_tag 'application','http://staging.tokbox.com/v0.91/js/TB.min.js',"jquery.tinyscrollbar.min" %>
+    <%= csrf_meta_tag %>
+<%# if current_user %>
+<%#= javascript_include_tag  'juggernaut','socket_io' %>
+<%# end %>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $("#scrollbar1").tinyscrollbar();
+      });
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="inner_container_logged_in">
+        <div id="logo_logged_in"><img src="/assets/edupdu_logo.png"/></div>
+        <div class="clear"></div>
+        <div class="clear"></div>
+        <div id="main_container">
+          <%= yield %>
+        </div>
+      </div>
+      <div class="clear"></div>
+      <div id="footer">Copyright &#169 2012 All rights reserved</div>
+    </div>
+  </body>
+</html>
